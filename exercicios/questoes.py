@@ -1,4 +1,3 @@
-
 import multiprocessing
 import threading
 import time
@@ -17,7 +16,7 @@ def rodar(func):
         func()
 
 
-@rodar
+# @rodar
 def questao01():
     processos = []
     for proc in psutil.process_iter():
@@ -45,7 +44,7 @@ def questao02():
 
     os.system(executavel)
 
-
+@rodar
 def questao03():
     try:
         diretorio = input("Entre com o caminho do diretório : ")
@@ -55,7 +54,7 @@ def questao03():
             nome_aqr = i
             tamanho_arq = os.path.getsize(join(diretorio, i))
 
-            arq.append((nome_aqr, str(tamanho_arq)))
+            arq.append((nome_aqr, str(tamanho_arq * 1024)))
 
         sorted_arq = sorted(arq, key=lambda item: item[1])
 
@@ -112,42 +111,56 @@ def num_aleatorio(qtd):
 
 
 def sequencial(qtd):
-    for num in num_aleatorio(qtd):
+    inicio = float(time.time())
+    for num in num_aleatorio(int(qtd)):
         fatorial(num)
+    fim = float(time.time())
+
+    print(f"Tempo {fim - inicio:0.2f}s")
 
 
 def thread4():
-    for num in num_aleatorio(1_000_000):
-        fatorial(num)
-    inicio = time.time()
-
-    threads = []
-
-    for x in tqdm.tqdm(range(4)):
-        t = threading.Thread(target=thread4)
+    inicio = float(time.time())
+    total = 10_000_000
+    Nthreads = 16
+    lista_threads = []
+    for x in range(Nthreads):
+        t = threading.Thread(target=sequencial, args=(total / Nthreads,))
         t.start()
-        threads.append(t)
+        lista_threads.append(t)
 
-    for t in threads:
+    for t in lista_threads:
         t.join()
-    fim = time.time()
 
-    print(fim - inicio)
+    fim = float(time.time())
+
+    print(f"Tempo{fim - inicio:0.2f}s")
+
 
 
 def multiprocess():
     manager = multiprocessing.Manager()
     lista = manager.list()
 
-    inicio = time.time()
+    total = 10_000_000
 
-    with ProcessPoolExecutor(max_workers=4) as executor:
-        for i in range(30):
-            future = executor.submit(sequencial, i, lista)
-        fim = time.time()
+    inicio = float(time.time())
 
-    print(inicio - fim)
+    NProc = 16
+
+    lista_proc = []
+
+    for i in range(NProc):
+        p = multiprocessing.Process(target=sequencial, args=(total / NProc,))
+        p.start()
+        lista_proc.append(p)
+    for p in lista_proc:
+        p.join()
+
+    fim = float(time.time())
+
+    print(f"Tempo : {fim - inicio:0.2f}s")
 
 
 if __name__ == "__main__":
-    pass
+    pass #sequencial(10_000_000)
